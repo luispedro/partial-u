@@ -1,3 +1,4 @@
+import numpy as np
 import random
 class Diff(object):
     def __init__(self, e, s):
@@ -50,16 +51,20 @@ def partial_U_test(start0, end0, start1, end1, n_permutations=10000):
     N0 = len(diff0)
     diffs = diff0 + diff1
     diff_ids = list(range(len(diffs)))
-    cache = {}
-    def cached_lt(i, j):
-        if (i,j) not in cache:
-            cache[i,j] = lt(diffs[i], diffs[j])
-        return cache[i,j]
 
+    table_valid = np.zeros((len(diffs), len(diffs)))
+    table_smaller = np.zeros((len(diffs), len(diffs)))
+    for i,d0 in enumerate(diffs):
+        for j, d1 in enumerate(diffs):
+            v = lt(d0,d1)
+            if v != 'NA':
+                table_valid[i,j] = 1
+                table_smaller[i,j] = v
 
     better = 0
     for _ in range(n_permutations):
         random.shuffle(diff_ids)
-        better += (
-                partial_U(diff_ids[:N0], diff_ids[N0:], cmp=cached_lt) < base)
+        cur = table_smaller[diff_ids[:N0]].T[diff_ids[N0:]].sum()/table_valid[diff_ids[:N0]].T[diff_ids[N0:]].sum()
+        cur = min(cur, 1.-cur)
+        better += (cur < base)
     return float(better + 1)/n_permutations
