@@ -18,25 +18,44 @@ class Diff(object):
         return '{}({})'.format(self.type, self.value)
     __repr__ = __str__
 
+#=======+=======+========+=======+=========================
+#       | exact | exact  | lt y  | lt y   |  gt y |   gt y
+#       | x < y | x >= y | x < y | x >= y | x < y | x >= y
+#=======+=======+========+=======+=========================
+# exact | True  | False  |  NA   |  False | True  | NA
+#-------+-------+--------+-------+--------+-------+--------
+#  lt x | True  | NA     |  NA   |  NA    | True  | NA
+#-------+-------+--------+-------+--------+-------+--------
+#  gt x | NA    | False  |  NA   |  False | NA    | NA
+#-------+-------+--------+-------+--------+-------+--------
+
+table = {
+        ('exact', 'exact'): (True, False),
+        ('exact', 'lt'): ('NA', False),
+        ('exact', 'gt'): (True, 'NA'),
+
+        ('lt', 'exact') : (True, 'NA'),
+        ('lt', 'lt') : ('NA', 'NA'),
+        ('lt', 'gt') : (True, 'NA'),
+
+        ('gt', 'exact') : ('NA', False),
+        ('gt', 'lt') : ('NA', False),
+        ('gt', 'gt') : ('NA', 'NA'),
+        }
+
+
+
 def lt(d1, d2):
     if d1.type == 'NA' or d2.type == 'NA':
         return 'NA'
-    if d1.type == 'exact' and d2.type == 'exact':
-        return d1.value < d2.value
-    if d1.type == 'gt' and d2.type == 'gt':
-        return 'NA'
-    if d1.type == 'exact' and d1.value < d2.value:
-        return True
-    if d2.type == 'exact' and d2.value < d1.value:
-        return False
-    return 'NA'
-def partial_U(diff0, diff1, cmp=None):
+    return table[d1.type, d2.type][d1.value >= d2.value]
+def partial_U(values0, values1, cmp=None):
     if cmp is None:
         cmp = lt
     smaller = 0.
     valid = 0
-    for d0 in diff0:
-        for d1 in diff1:
+    for d0 in values0:
+        for d1 in values1:
             c = cmp(d0, d1)
             if c != 'NA':
                 valid += 1
@@ -46,12 +65,10 @@ def partial_U(diff0, diff1, cmp=None):
     frac = smaller/valid
     return min(frac, 1.-frac)
 
-def partial_U_test(start0, end0, start1, end1, n_permutations=10000):
-    diff0 = [Diff(s0,e0) for s0,e0 in zip(start0, end0)]
-    diff1 = [Diff(s1,e1) for s1,e1 in zip(start1, end1)]
-    base = partial_U(diff0, diff1)
-    N0 = len(diff0)
-    diffs = diff0 + diff1
+def partial_U_test(values0, values1, n_permutations=10000):
+    base = partial_U(values0, values1)
+    N0 = len(values0)
+    diffs = values0 + values1
     diff_ids = list(range(len(diffs)))
 
     table_valid = np.zeros((len(diffs), len(diffs)))
