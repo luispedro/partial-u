@@ -15,6 +15,11 @@ def compare_clipping(N, delta0=-2, delta1=-4):
 
     end0 = start0 + np.random.normal(delta0, 1, size=N)
     end1 = start1 + np.random.normal(delta1, 1, size=N)
+    end0[end0 > 0] = 0
+    end1[end1 > 0] = 0
+
+    if np.all(end0 < -7) and np.all(end1 < -7):
+        return compare_clipping(N, delta0, delta1)
 
 
     return (
