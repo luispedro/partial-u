@@ -41,6 +41,8 @@ def partial_U(diff0, diff1, cmp=None):
             if c != 'NA':
                 valid += 1
                 smaller += c
+    if valid == 0:
+        return 1.
     frac = smaller/valid
     return min(frac, 1.-frac)
 
