@@ -59,11 +59,10 @@ def partial_U(values0, values1, cmp=None):
             c = cmp(d0, d1)
             if c != 'NA':
                 valid += 1
-                smaller += c
+                smaller += (-1 if c else +1)
     if valid == 0:
         return 1.
-    frac = smaller/valid
-    return min(frac, 1.-frac)
+    return smaller
 
 def partial_U_test(values0, values1, n_permutations=10000):
     base = partial_U(values0, values1)
@@ -84,6 +83,5 @@ def partial_U_test(values0, values1, n_permutations=10000):
     for _ in range(n_permutations):
         random.shuffle(diff_ids)
         cur = table_smaller[diff_ids[:N0]].T[diff_ids[N0:]].sum()/table_valid[diff_ids[:N0]].T[diff_ids[N0:]].sum()
-        cur = min(cur, 1.-cur)
-        better += (cur < base)
-    return float(better + 1)/n_permutations
+        better += (np.abs(cur) < np.abs(base))
+    return base, float(better + 1)/n_permutations
