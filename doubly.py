@@ -1,26 +1,13 @@
+from scipy import stats
+from collections import namedtuple
 import numpy as np
 Na = 18
 Nb = 19
 
-def old_school(va, vb, ra, rb, la, lb):
-    diffs = np.subtract.outer(va, vb)
-    sign = np.sign(diffs)
-
-    ea = ~ra & ~la
-    eb = ~rb & ~lb
-
-    oand = np.logical_and.outer
-
-    valid =  (oand(ea, eb)
-            |oand(ea, lb)&(sign>0) | oand(ea,rb)&(sign<0)
-            |oand(la, eb)&(sign<0) | oand(la,rb)&(sign<0)
-            |oand(ra, eb)&(sign>0) | oand(ra,lb)&(sign>0))
-
-    U = np.sum( sign * valid )
-    return U
-
-
-def new_school(va, vb, ra, rb, la, lb):
+GehanResult = namedtuple('GehanResult', ['u', 'pvalue'])
+def gehan2sided(va, vb, ra, rb, la, lb):
+    n1 = len(va)
+    n2 = len(vb)
     v = np.concatenate( [va, vb] )
     r = np.concatenate( [ra, rb] )
     l = np.concatenate( [la, lb] )
@@ -33,11 +20,15 @@ def new_school(va, vb, ra, rb, la, lb):
             | (oand(e, l) & (s > 0)) | (oand(l, e)&(s < 0))
             | (oand(r, l) & (s > 0)) | (oand(l, r)&(s < 0)))
     w = s.sum(1)
-    labels = np.ones(Na+Nb, bool)
-    labels[Na:] = False
-    return w[labels].sum()
+    labels = np.ones(n1+n2, bool)
+    labels[n1:] = False
+    stat = w[labels].sum()
+    p = stats.norm.cdf(stat/np.sqrt(n1*n2/(n1+n2+1)*w.var()))
+    p = min(p, 1-p)
+    p *= 2
+    return GehanResult(stat, p)
 
-
+rs = []
 for _ in range(10000):
     va = np.random.random(size=Na)
     vb = np.random.random(size=Nb)
@@ -45,5 +36,5 @@ for _ in range(10000):
     ra = np.random.random(size=Na) < .2
     rb = np.random.random(size=Nb) < .2
     lb = np.random.random(size=Nb) < .2
-    print(old_school(va, vb, ra, rb, la, lb) - new_school(va, vb, ra, rb, la, lb))
+    rs.append(gehan2sided(va, vb, ra, rb, la, lb))
 
