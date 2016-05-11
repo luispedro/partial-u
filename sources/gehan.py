@@ -3,12 +3,12 @@ from collections import namedtuple
 import numpy as np
 
 GehanResult = namedtuple('GehanResult', ['u', 'pvalue'])
-def gehan2sided(va, vb, ra, rb, la, lb):
+def gehan2sided(va, vb, la, lb, ra, rb):
     n1 = len(va)
     n2 = len(vb)
     v = np.concatenate( [va, vb] )
-    r = np.concatenate( [ra, rb] )
     l = np.concatenate( [la, lb] )
+    r = np.concatenate( [ra, rb] )
     ok = ~r | ~l
 
     oand = np.logical_and.outer

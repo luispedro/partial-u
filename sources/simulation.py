@@ -10,7 +10,7 @@ def clip_diff(v0, v1):
     return clip(v0) - clip(v1)
 
 def gehan_diff(start0, end0, start1, end1):
-    return gehan2sided(clip_diff(end0, start0), clip_diff(end1, start1), start0 < -7, start1 < -7, end0 < -7, end1 < -7)
+    return gehan2sided(clip_diff(end0, start0), clip_diff(end1, start1), end0 < -7, end1 < -7, start0 < -7, start1 < -7)
 
 def compare_clipping(N, delta0=-2, delta1=-4):
     start0 = -10*np.random.rand(N) - 2
