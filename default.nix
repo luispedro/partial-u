@@ -21,6 +21,9 @@ in
             ipython
             numpy
             scipy
+            pandas
+            matplotlib
+            pyside
             virtualenv
             jug
             pkgs.zsh
