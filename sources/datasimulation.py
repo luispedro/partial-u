@@ -9,6 +9,7 @@ from jug.compound import CompoundTaskGenerator
 
 FEATURES = 'species'
 MIN_PREVALENCE = 10
+N_REPLICATES = 1000
 
 if FEATURES == 'KEGG_ko':
     data = pd.read_table('/g/bork5/kultima/DOGS/PROFILES/functional.profiles/dogs.129/dogs.129.functional.profile.screened.screened.adapter.on.cm3.on.dogs.129.padded.solexaqa.allbest.l45.p95.insert.raw.KEGG_ko', comment='#', index_col=0)
@@ -29,7 +30,7 @@ else:
 
 
 @TaskGenerator
-def perform_test(c, R, sample_by=None):
+def perform_test(c, R, sample_by=None, uneven=False):
     random.seed(R)
     rs = []
     col = data[c]
@@ -38,12 +39,15 @@ def perform_test(c, R, sample_by=None):
         random.shuffle(samples)
         col = col[samples[:len(col)//sample_by]]
 
-    N = len(col)//2
+    if uneven:
+        N = len(col)//4
+    else:
+        N = len(col)//2
     ra = np.zeros(N, bool)
     rb = np.zeros(len(col) - N, bool)
     for j,effect in enumerate(np.logspace(0, -5, 100)):
         cur = []
-        for _ in range(100):
+        for _ in range(N_REPLICATES):
             samples = list(col.index)
             random.shuffle(samples)
             s = col[samples]
@@ -84,7 +88,8 @@ def build_plots(results, ofile):
     fig,axes = plt.subplots(12, 10, sharey=True, sharex=True, figsize=[12,10])
     ni = 0
     plim = 0.01
-    for c,k in results.items():
+    for c in sorted(results.keys()):
+        k = results[c]
         power = (k < plim).mean(1)
         ax = axes.flat[ni]
         ax.plot(x, power.T[0], label='Gehan')
@@ -110,10 +115,15 @@ def build_plots(results, ofile):
 results = {}
 for i,c in enumerate(data.columns):
     results[c] = perform_test(str(c), i*7, 2)
-#build_plots(results, 'power_dog_species_N=32.pdf')
+build_plots(results, 'power_dog_species_N=32.pdf')
+
+results = {}
+for i,c in enumerate(data.columns):
+    results[c] = perform_test(str(c), i*7, uneven=True)
+build_plots(results, 'power_dog_species_Uneven.pdf')
 
 results = {}
 for i,c in enumerate(data.columns):
     results[c] = perform_test(str(c), i*7)
 
-#build_plots(results, 'power_dog_species_N=65.pdf')
+build_plots(results, 'power_dog_species_N=65.pdf')
