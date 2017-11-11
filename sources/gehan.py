@@ -4,6 +4,12 @@ import numpy as np
 
 GehanResult = namedtuple('GehanResult', ['u', 'pvalue'])
 def gehan2sided(va, vb, la, lb, ra, rb):
+    '''
+    va : values for A
+    vb : values for B
+    la/lb : whether the corresponding value is left censored
+    ra/rb : whether the corresponding value is right censored
+    '''
     n1 = len(va)
     n2 = len(vb)
     v = np.concatenate( [va, vb] )
